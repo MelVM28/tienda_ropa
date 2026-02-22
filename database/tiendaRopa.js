@@ -80,3 +80,37 @@ db.prendas.updateOne(
 
 // Eliminar una prenda
 db.prendas.deleteOne({ nombre: "Vestido Midi Asimetrico" })
+
+// ============================
+// CONSULTAS
+// ============================
+
+// Mostrar todas las ventas registradas
+// Esta consulta obtiene todos los documentos de la colección ventas
+db.ventas.find()
+
+// Obtener ventas realizadas en una fecha específica
+// Esta consulta filtra las ventas del 21 de febrero de 2025
+db.ventas.find({
+    fecha: new Date("2025-02-21")
+})
+
+// Obtener la cantidad total de prendas vendidas en una fecha específica
+// Esta consulta suma la cantidad de prendas vendidas el 21 de febrero de 2025
+db.ventas.aggregate([
+    {
+        $match: {
+            fecha: new Date("2025-02-21")
+        }
+    },
+    {
+        $unwind: "$prendas"
+    },
+    {
+        $group: {
+            _id: "$fecha",
+            totalPrendasVendidas: { $sum: "$prendas.cantidad" }
+        }
+    }
+])
+
