@@ -1,28 +1,49 @@
-# 🛍️ Tienda de Ropa - Base de Datos MongoDB
+# 🛍️ Tienda de Ropa - Base de Datos & API REST
 
-Base de datos no relacional para una tienda de ropa, implementada en **MongoDB Atlas**. Incluye operaciones CRUD completas y consultas de análisis de ventas.
+Proyecto completo de una tienda de ropa con base de datos **MongoDB Atlas** y una **API REST** desarrollada en **Python + Flask**.
 
 ---
 
 ## 📁 Estructura del Repositorio
 
 ```
-tienda-ropa-mongodb/
+tienda_ropa/
 │
 ├── database/
-│   └── tiendaRopa.js   # Script principal con BD, colecciones y consultas
-└── README.md           # Documentación del proyecto
+│   └── tiendaRopa.js         # Script CRUD MongoDB (Parte I)
+│
+├── API/
+│   └── v1/
+│       ├── run.py             # Punto de entrada de la API
+│       ├── requirements.txt   # Dependencias
+│       └── app/
+│           ├── __init__.py
+│           ├── index.py       # Registro de rutas
+│           ├── controllers/
+│           │   ├── usuarios.py
+│           │   ├── marcas.py
+│           │   ├── prendas.py
+│           │   ├── ventas.py
+│           │   └── reportes.py
+│           └── models/
+│               ├── db.py
+│               ├── usuario.py
+│               ├── marca.py
+│               ├── prenda.py
+│               └── venta.py
+│
+└── README.md
 ```
 
 ---
 
-## 🗄️ Colecciones
+## 🗄️ Parte I — Base de Datos MongoDB
 
-El diseño sigue el enfoque **no relacional**: los datos relacionados se **embeben** dentro del documento en lugar de referenciar otras colecciones, lo que reduce los *joins* y mejora el rendimiento en lecturas.
+El diseño sigue el enfoque **no relacional**: los datos relacionados se **embeben** dentro del documento en lugar de referenciar otras colecciones.
+
+### Colecciones
 
 ### 1. `usuarios`
-Almacena los datos de los clientes registrados en la tienda.
-
 | Campo           | Tipo   | Descripción                     |
 |-----------------|--------|---------------------------------|
 | `nombre`        | String | Nombre completo del usuario     |
@@ -31,7 +52,7 @@ Almacena los datos de los clientes registrados en la tienda.
 | `direccion`     | String | Ubicación del usuario           |
 | `fechaRegistro` | Date   | Fecha de registro en el sistema |
 
-**Ejemplo de documento:**
+**Ejemplo:**
 ```json
 {
   "nombre": "Gael Montiel",
@@ -42,18 +63,14 @@ Almacena los datos de los clientes registrados en la tienda.
 }
 ```
 
----
-
 ### 2. `marcas`
-Almacena la información de las marcas de ropa disponibles.
-
 | Campo        | Tipo   | Descripción                 |
 |--------------|--------|-----------------------------|
 | `nombre`     | String | Nombre de la marca          |
 | `paisOrigen` | String | País de origen de la marca  |
 | `categoria`  | String | Tipo de moda que representa |
 
-**Ejemplo de documento:**
+**Ejemplo:**
 ```json
 {
   "nombre": "Aurelia Studio",
@@ -62,11 +79,7 @@ Almacena la información de las marcas de ropa disponibles.
 }
 ```
 
----
-
 ### 3. `prendas`
-Almacena las prendas disponibles en la tienda con sus detalles.
-
 | Campo    | Tipo   | Descripción                       |
 |----------|--------|-----------------------------------|
 | `nombre` | String | Nombre de la prenda               |
@@ -75,7 +88,7 @@ Almacena las prendas disponibles en la tienda con sus detalles.
 | `precio` | Number | Precio en colones                 |
 | `stock`  | Number | Cantidad disponible en inventario |
 
-**Ejemplo de documento:**
+**Ejemplo:**
 ```json
 {
   "nombre": "Blazer Oversize Lino",
@@ -86,19 +99,207 @@ Almacena las prendas disponibles en la tienda con sus detalles.
 }
 ```
 
+### 4. `ventas`
+| Campo     | Tipo   | Descripción                              |
+|-----------|--------|------------------------------------------|
+| `usuario` | String | Nombre del cliente que realizó la compra |
+| `prendas` | Array  | Lista de prendas compradas con cantidad  |
+| `total`   | Number | Monto total de la compra                 |
+| `fecha`   | Date   | Fecha de la transacción                  |
+
+**Ejemplo:**
+```json
+{
+  "usuario": "Gael Montiel",
+  "prendas": [{ "nombre": "Blazer Oversize Lino", "cantidad": 1 }],
+  "total": 42000,
+  "fecha": "2025-02-20"
+}
+```
+
+### Operaciones CRUD
+| Operación        | Método MongoDB                  |
+|------------------|---------------------------------|
+| Insertar un dato | `insertOne()`                   |
+| Insertar varios  | `insertMany()`                  |
+| Actualizar       | `updateOne()`                   |
+| Eliminar         | `deleteOne()` / `deleteMany()`  |
+
+### Consultas
+| # | Descripción |
+|---|-------------|
+| 1 | Cantidad total de prendas vendidas agrupadas **por fecha** |
+| 2 | Cantidad de prendas vendidas **filtrando por una fecha específica** |
+
+### Cómo ejecutar el script
+```bash
+mongosh "mongodb+srv://cluster0.ux5x4h0.mongodb.net/" --apiVersion 1 --username mel_db
+```
+```js
+load("ruta/al/archivo/tiendaRopa.js")
+```
+
 ---
 
-### 4. `ventas`
-Almacena cada transacción. Sigue el modelo **desnormalizado**: los datos del usuario y las prendas se guardan directamente en el documento.
+## 🚀 Parte II — API REST con Flask
 
-| Campo    | Tipo   | Descripción                              |
-|----------|--------|------------------------------------------|
-| `usuario`| String | Nombre del cliente que realizó la compra |
-| `prendas`| Array  | Lista de prendas compradas con cantidad  |
-| `total`  | Number | Monto total de la compra                 |
-| `fecha`  | Date   | Fecha de la transacción                  |
+### Cómo ejecutar la API
+```bash
+cd API/v1
+pip install -r requirements.txt
+python run.py
+```
+La API queda disponible en: `http://127.0.0.1:5000`
 
-**Ejemplo de documento:**
+---
+
+## 📡 Endpoints
+
+### 👤 Usuarios
+
+#### Obtener todos los usuarios
+- **Método:** GET
+- **URL:** `http://127.0.0.1:5000/tienda/api/v1/usuarios`
+- **Respuesta:**
+```json
+[
+  {
+    "_id": "65f3a2b1c4e5d6f7a8b9c0d1",
+    "nombre": "Gael Montiel",
+    "email": "gael.montiel@gmail.com",
+    "telefono": "8745-2190",
+    "direccion": "Cartago"
+  }
+]
+```
+
+#### Obtener usuario por ID
+- **Método:** GET
+- **URL:** `http://127.0.0.1:5000/tienda/api/v1/usuarios/<id>`
+
+#### Crear usuario
+- **Método:** POST
+- **URL:** `http://127.0.0.1:5000/tienda/api/v1/usuarios`
+- **Body:**
+```json
+{
+  "nombre": "Gael Montiel",
+  "email": "gael.montiel@gmail.com",
+  "telefono": "8745-2190",
+  "direccion": "Cartago",
+  "fechaRegistro": "2025-02-22"
+}
+```
+
+#### Actualizar usuario
+- **Método:** PUT
+- **URL:** `http://127.0.0.1:5000/tienda/api/v1/usuarios/<id>`
+- **Body:**
+```json
+{
+  "telefono": "8888-9999"
+}
+```
+
+#### Eliminar usuario
+- **Método:** DELETE
+- **URL:** `http://127.0.0.1:5000/tienda/api/v1/usuarios/<id>`
+
+---
+
+### 🏷️ Marcas
+
+#### Obtener todas las marcas
+- **Método:** GET
+- **URL:** `http://127.0.0.1:5000/tienda/api/v1/marcas`
+
+#### Obtener marca por ID
+- **Método:** GET
+- **URL:** `http://127.0.0.1:5000/tienda/api/v1/marcas/<id>`
+
+#### Crear marca
+- **Método:** POST
+- **URL:** `http://127.0.0.1:5000/tienda/api/v1/marcas`
+- **Body:**
+```json
+{
+  "nombre": "Aurelia Studio",
+  "paisOrigen": "Italia",
+  "categoria": "Moda contemporánea"
+}
+```
+
+#### Actualizar marca
+- **Método:** PUT
+- **URL:** `http://127.0.0.1:5000/tienda/api/v1/marcas/<id>`
+- **Body:**
+```json
+{
+  "categoria": "Alta costura"
+}
+```
+
+#### Eliminar marca
+- **Método:** DELETE
+- **URL:** `http://127.0.0.1:5000/tienda/api/v1/marcas/<id>`
+
+---
+
+### 👗 Prendas
+
+#### Obtener todas las prendas
+- **Método:** GET
+- **URL:** `http://127.0.0.1:5000/tienda/api/v1/prendas`
+
+#### Obtener prenda por ID
+- **Método:** GET
+- **URL:** `http://127.0.0.1:5000/tienda/api/v1/prendas/<id>`
+
+#### Crear prenda
+- **Método:** POST
+- **URL:** `http://127.0.0.1:5000/tienda/api/v1/prendas`
+- **Body:**
+```json
+{
+  "nombre": "Blazer Oversize Lino",
+  "marca": "Aurelia Studio",
+  "talla": "M",
+  "precio": 42000,
+  "stock": 12
+}
+```
+
+#### Actualizar prenda
+- **Método:** PUT
+- **URL:** `http://127.0.0.1:5000/tienda/api/v1/prendas/<id>`
+- **Body:**
+```json
+{
+  "precio": 39000,
+  "stock": 8
+}
+```
+
+#### Eliminar prenda
+- **Método:** DELETE
+- **URL:** `http://127.0.0.1:5000/tienda/api/v1/prendas/<id>`
+
+---
+
+### 🧾 Ventas
+
+#### Obtener todas las ventas
+- **Método:** GET
+- **URL:** `http://127.0.0.1:5000/tienda/api/v1/ventas`
+
+#### Obtener venta por ID
+- **Método:** GET
+- **URL:** `http://127.0.0.1:5000/tienda/api/v1/ventas/<id>`
+
+#### Crear venta
+- **Método:** POST
+- **URL:** `http://127.0.0.1:5000/tienda/api/v1/ventas`
+- **Body:**
 ```json
 {
   "usuario": "Gael Montiel",
@@ -110,54 +311,47 @@ Almacena cada transacción. Sigue el modelo **desnormalizado**: los datos del us
 }
 ```
 
----
+#### Actualizar venta
+- **Método:** PUT
+- **URL:** `http://127.0.0.1:5000/tienda/api/v1/ventas/<id>`
+- **Body:**
+```json
+{
+  "total": 45000
+}
+```
 
-## ⚙️ Operaciones CRUD
-
-Cada colección incluye las siguientes operaciones:
-
-| Operación        | Método MongoDB                  |
-|------------------|---------------------------------|
-| Insertar un dato | `insertOne()`                   |
-| Insertar varios  | `insertMany()`                  |
-| Actualizar       | `updateOne()`                   |
-| Eliminar         | `deleteOne()` / `deleteMany()`  |
-
----
-
-## 🔍 Consultas
-
-| # | Descripción |
-|---|-------------|
-| 1 | Cantidad total de prendas vendidas agrupadas **por fecha** |
-| 2 | Cantidad de prendas vendidas **filtrando por una fecha específica** |
+#### Eliminar venta
+- **Método:** DELETE
+- **URL:** `http://127.0.0.1:5000/tienda/api/v1/ventas/<id>`
 
 ---
 
-## 🚀 Cómo ejecutar
+### 📊 Reportes
 
-1. Conectarse a **MongoDB Atlas** desde la terminal:
-   ```bash
-   mongosh "mongodb+srv://cluster0.xxxxx.mongodb.net/" --apiVersion 1 --username tuUsuario
-   ```
-
-2. Una vez conectado, cargar el archivo:
-   ```js
-   load("ruta/al/archivo/tiendaRopa.js")
-   ```
-
-3. Verificar las colecciones creadas:
-   ```js
-   use("tienda_ropa")
-   show collections
-   ```
+#### Marcas con al menos una venta
+- **Método:** GET
+- **URL:** `http://127.0.0.1:5000/tienda/api/v1/reportes/marcas-con-ventas`
+- **Respuesta:**
+```json
+[
+  {
+    "_id": "Aurelia Studio",
+    "totalVentas": 3,
+    "totalPrendas": 5
+  }
+]
+```
 
 ---
 
 ## 🛠️ Tecnologías
 
+- **Python + Flask** — API REST
+- **PyMongo** — Conexión a MongoDB desde Python
 - **MongoDB Atlas** — Base de datos NoSQL en la nube
 - **GitHub** — Control de versiones
+- **Postman** — Prueba de endpoints
 - **Markdown** — Documentación
 
 ---
