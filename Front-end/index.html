@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ATELIER — Gestión de Tienda</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+  <style>
+    :root {
+      --cream:   #f5f0e8;
+      --white:   #fdfcfa;
+      --black:   #0a0a0a;
+      --coral:   #d94f3d;
+      --sand:    #c9b99a;
+      --ink:     #1c1c1c;
+      --rule:    #d0c8bc;
+      --muted:   #8a7f74;
+      --surface: #eee9e0;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--cream);
+      color: var(--ink);
+      font-family: 'Syne', sans-serif;
+      min-height: 100vh;
+    }
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 9999; opacity: 0.5;
+    }
+
+    /* HEADER */
+    .header {
+      background: var(--black);
+      padding: 0 48px;
+      height: 62px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky; top: 0; z-index: 100;
+    }
+    .brand {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.75rem;
+      font-weight: 300;
+      color: var(--cream);
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+    }
+    .brand em { color: var(--coral); font-style: italic; }
+    .header-sub {
+      font-size: 0.62rem;
+      letter-spacing: 0.2em;
+      color: var(--sand);
+      text-transform: uppercase;
+    }
+
+    /* NAV */
+    .nav {
+      background: var(--white);
+      border-bottom: 1px solid var(--rule);
+      padding: 0 48px;
+      display: flex;
+      gap: 0;
+    }
+    .nav-btn {
+      padding: 18px 26px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--muted);
+      cursor: pointer;
+      border: none;
+      background: none;
+      border-bottom: 2px solid transparent;
+      transition: all 0.18s;
+      white-space: nowrap;
+    }
+    .nav-btn:hover { color: var(--ink); }
+    .nav-btn.active { color: var(--coral); border-bottom-color: var(--coral); }
+
+    /* PAGES */
+    .page { display: none; animation: fadeUp 0.3s ease; }
+    .page.active { display: block; }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* EDITORIAL HEADER */
+    .ed-header {
+      background: var(--white);
+      padding: 52px 48px 30px;
+      border-bottom: 1px solid var(--rule);
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+    }
+    .ed-eye {
+      font-size: 0.62rem;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: var(--coral);
+      margin-bottom: 10px;
+    }
+    .ed-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 4.2rem;
+      font-weight: 300;
+      line-height: 0.88;
+      color: var(--black);
+    }
+    .ed-title em { font-style: italic; color: var(--coral); }
+    .ed-sub {
+      font-size: 0.72rem;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+      margin-top: 14px;
+    }
+
+    /* BUTTONS */
+    .btn-p {
+      background: var(--coral);
+      color: #fff;
+      border: none;
+      padding: 13px 26px;
+      font-family: 'Syne', sans-serif;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.18s;
+    }
+    .btn-p:hover { background: var(--ink); transform: translateY(-2px); }
+    .btn-g {
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--rule);
+      padding: 12px 22px;
+      font-family: 'Syne', sans-serif;
+      font-size: 0.68rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.18s;
+    }
+    .btn-g:hover { border-color: var(--ink); color: var(--ink); }
+
+    /* STATS */
+    .dashboard-body { padding: 40px 48px; }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1px;
+      background: var(--rule);
+      border: 1px solid var(--rule);
+      margin-bottom: 40px;
+    }
+    .stat {
+      background: var(--white);
+      padding: 30px 26px;
+      position: relative;
+      overflow: hidden;
+      transition: background 0.18s;
+    }
+    .stat:hover { background: var(--surface); }
+    .stat-n {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 4.8rem;
+      font-weight: 300;
+      line-height: 1;
+      color: var(--black);
+    }
+    .stat-l {
+      font-size: 0.62rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+    .stat-bg {
+      position: absolute;
+      top: -18px; right: -8px;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 7.5rem;
+      font-weight: 300;
+      color: var(--coral);
+      opacity: 0.055;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    /* SECTION LABEL */
+    .sec-label {
+      font-size: 0.62rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: 24px 0 0;
+      border-top: 1px solid var(--rule);
+      margin-bottom: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .sec-link {
+      color: var(--coral);
+      font-size: 0.6rem;
+      cursor: pointer;
+      letter-spacing: 0.1em;
+    }
+
+    /* TABLE */
+    .content { padding: 0 48px 60px; }
+    .tbl { width: 100%; border-collapse: collapse; }
+    .tbl thead th {
+      padding: 15px 18px;
+      font-size: 0.6rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--muted);
+      border-bottom: 1px solid var(--rule);
+      text-align: left;
+      background: var(--white);
+      font-weight: 700;
+    }
+    .tbl tbody td {
+      padding: 17px 18px;
+      font-size: 0.84rem;
+      border-bottom: 1px solid var(--rule);
+      color: var(--ink);
+      background: var(--white);
+      transition: background 0.12s;
+    }
+    .tbl tbody tr:hover td { background: var(--surface); }
+    .tbl tbody tr:last-child td { border-bottom: none; }
+    .cell-serif {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.1rem;
+    }
+    .cell-coral { color: var(--coral); font-weight: 600; }
+    .tag {
+      display: inline-block;
+      padding: 2px 10px;
+      font-size: 0.62rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      font-weight: 700;
+      border: 1px solid;
+    }
+    .tag-ok  { border-color: #3a8a3a; color: #3a8a3a; background: rgba(58,138,58,0.07); }
+    .tag-low { border-color: var(--coral); color: var(--coral); background: rgba(217,79,61,0.07); }
+
+    .abtn {
+      width: 29px; height: 29px;
+      border: 1px solid var(--rule);
+      background: none;
+      cursor: pointer;
+      color: var(--muted);
+      font-size: 0.75rem;
+      transition: all 0.15s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .abtn:hover     { border-color: var(--ink);   color: var(--ink);   }
+    .abtn.del:hover { border-color: var(--coral);  color: var(--coral); }
+
+    /* EMPTY */
+    .empty {
+      padding: 70px 20px;
+      text-align: center;
+      color: var(--muted);
+      background: var(--white);
+    }
+    .empty-sym {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 5.5rem;
+      font-weight: 300;
+      color: var(--rule);
+      line-height: 1;
+    }
+    .empty p { font-size: 0.68rem; letter-spacing: 0.18em; text-transform: uppercase; margin-top: 10px; }
+
+    /* DRAWER */
+    .overlay {
+      position: fixed; inset: 0;
+      background: rgba(10,10,10,0.55);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 500;
+      backdrop-filter: blur(5px);
+    }
+    .overlay.open { display: flex; }
+    .drawer {
+      background: var(--white);
+      width: 500px;
+      max-width: 95vw;
+      max-height: 90vh;
+      overflow-y: auto;
+      animation: drIn 0.22s ease;
+      border-top: 3px solid var(--coral);
+    }
+    @keyframes drIn {
+      from { opacity: 0; transform: scale(0.97) translateY(14px); }
+      to   { opacity: 1; transform: scale(1)    translateY(0); }
+    }
+    .dr-head {
+      padding: 30px 34px 22px;
+      border-bottom: 1px solid var(--rule);
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+    }
+    .dr-eye {
+      font-size: 0.58rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--coral);
+      margin-bottom: 5px;
+    }
+    .dr-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.9rem;
+      font-weight: 300;
+      color: var(--black);
+    }
+    .dr-close {
+      background: none; border: none;
+      font-size: 1.1rem; cursor: pointer;
+      color: var(--muted); transition: color 0.15s;
+    }
+    .dr-close:hover { color: var(--coral); }
+    .dr-body { padding: 26px 34px; }
+    .dr-foot {
+      padding: 18px 34px 26px;
+      border-top: 1px solid var(--rule);
+      display: flex; gap: 10px; justify-content: flex-end;
+    }
+    .field { margin-bottom: 18px; }
+    .field label {
+      display: block;
+      font-size: 0.6rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 7px;
+      font-weight: 600;
+    }
+    .field input, .field select {
+      width: 100%;
+      background: var(--cream);
+      border: 1px solid var(--rule);
+      border-bottom: 2px solid var(--rule);
+      padding: 11px 14px;
+      font-family: 'Syne', sans-serif;
+      font-size: 0.875rem;
+      color: var(--ink);
+      outline: none;
+      transition: border-color 0.18s, background 0.18s;
+    }
+    .field input:focus, .field select:focus {
+      border-bottom-color: var(--coral);
+      background: var(--white);
+    }
+    .frow { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+    /* REPORT CARDS */
+    .rep-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+      gap: 1px;
+      background: var(--rule);
+      border: 1px solid var(--rule);
+    }
+    .rep-card {
+      background: var(--white);
+      padding: 34px 30px;
+      position: relative;
+      overflow: hidden;
+      transition: background 0.18s;
+    }
+    .rep-card:hover { background: var(--surface); }
+    .rep-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.75rem;
+      font-weight: 400;
+      color: var(--black);
+      margin-bottom: 14px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--rule);
+    }
+    .rep-row {
+      display: flex; justify-content: space-between;
+      align-items: baseline; margin-bottom: 6px;
+    }
+    .rep-lbl { font-size: 0.6rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); }
+    .rep-val {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2.1rem; font-weight: 300;
+      color: var(--coral); line-height: 1;
+    }
+    .rep-deco {
+      position: absolute; bottom: -12px; right: 8px;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 6.5rem; font-weight: 300;
+      color: var(--coral); opacity: 0.05;
+      pointer-events: none;
+    }
+
+    /* TOAST */
+    .toasts {
+      position: fixed; bottom: 28px; right: 28px;
+      z-index: 9000; display: flex;
+      flex-direction: column; gap: 8px; pointer-events: none;
+    }
+    .toast {
+      background: var(--black); color: var(--cream);
+      padding: 13px 20px; font-size: 0.76rem;
+      letter-spacing: 0.04em;
+      display: flex; align-items: center; gap: 8px;
+      animation: tIn 0.22s ease;
+      border-left: 3px solid var(--coral);
+      min-width: 230px;
+    }
+    .toast.ok  { border-left-color: #4caf50; }
+    .toast.err { border-left-color: var(--coral); }
+    @keyframes tIn {
+      from { opacity: 0; transform: translateX(18px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: var(--cream); }
+    ::-webkit-scrollbar-thumb { background: var(--sand); }
+  </style>
+</head>
+<body>
+
+<header class="header">
+  <div class="brand">ATELI<em>ER</em></div>
+  <div class="header-sub">Sistema de Gestión · Tienda de Ropa</div>
+</header>
+
+<nav class="nav">
+  <button class="nav-btn active" onclick="nav(this,'dashboard')">Overview</button>
+  <button class="nav-btn" onclick="nav(this,'prendas')">Prendas</button>
+  <button class="nav-btn" onclick="nav(this,'usuarios')">Usuarios</button>
+  <button class="nav-btn" onclick="nav(this,'marcas')">Marcas</button>
+  <button class="nav-btn" onclick="nav(this,'ventas')">Ventas</button>
+  <button class="nav-btn" onclick="nav(this,'reporte')">Reporte</button>
+</nav>
+
+<!-- DASHBOARD -->
+<div id="page-dashboard" class="page active">
+  <div class="ed-header">
+    <div>
+      <div class="ed-eye">Panel Principal</div>
+      <div class="ed-title">Bienvenida,<br><em>Melany.</em></div>
+      <div class="ed-sub">Resumen general del inventario y operaciones</div>
+    </div>
+  </div>
+  <div class="dashboard-body">
+    <div class="stats">
+      <div class="stat"><div class="stat-n" id="c-p">—</div><div class="stat-l">Prendas</div><div class="stat-bg">P</div></div>
+      <div class="stat"><div class="stat-n" id="c-u">—</div><div class="stat-l">Usuarios</div><div class="stat-bg">U</div></div>
+      <div class="stat"><div class="stat-n" id="c-m">—</div><div class="stat-l">Marcas</div><div class="stat-bg">M</div></div>
+      <div class="stat"><div class="stat-n" id="c-v">—</div><div class="stat-l">Ventas</div><div class="stat-bg">V</div></div>
+    </div>
+    <div class="sec-label">
+      <span>Inventario reciente</span>
+      <span class="sec-link" onclick="navTo('prendas')">Ver todas →</span>
+    </div>
+    <table class="tbl"><thead><tr><th>Prenda</th><th>Marca</th><th>Talla</th><th>Precio</th><th>Stock</th></tr></thead>
+    <tbody id="dash-tb"></tbody></table>
+  </div>
+</div>
+
+<!-- PRENDAS -->
+<div id="page-prendas" class="page">
+  <div class="ed-header">
+    <div><div class="ed-eye">Inventario</div><div class="ed-title">Pren<em>das</em></div><div class="ed-sub">Gestión completa del catálogo de prendas</div></div>
+    <button class="btn-p" onclick="openDr('prenda')">+ Agregar prenda</button>
+  </div>
+  <div class="content">
+    <div class="sec-label" style="margin-bottom:0"><span>Catálogo completo</span></div>
+    <table class="tbl"><thead><tr><th>Nombre</th><th>Marca</th><th>Talla</th><th>Precio</th><th>Stock</th><th></th></tr></thead>
+    <tbody id="tb-p"></tbody></table>
+  </div>
+</div>
+
+<!-- USUARIOS -->
+<div id="page-usuarios" class="page">
+  <div class="ed-header">
+    <div><div class="ed-eye">Clientes</div><div class="ed-title">Usua<em>rios</em></div><div class="ed-sub">Clientes registrados en la tienda</div></div>
+    <button class="btn-p" onclick="openDr('usuario')">+ Agregar usuario</button>
+  </div>
+  <div class="content">
+    <div class="sec-label" style="margin-bottom:0"><span>Directorio de clientes</span></div>
+    <table class="tbl"><thead><tr><th>Nombre</th><th>Email</th><th>Teléfono</th><th>Dirección</th><th></th></tr></thead>
+    <tbody id="tb-u"></tbody></table>
+  </div>
+</div>
+
+<!-- MARCAS -->
+<div id="page-marcas" class="page">
+  <div class="ed-header">
+    <div><div class="ed-eye">Catálogo</div><div class="ed-title">Mar<em>cas</em></div><div class="ed-sub">Marcas de ropa disponibles en la tienda</div></div>
+    <button class="btn-p" onclick="openDr('marca')">+ Agregar marca</button>
+  </div>
+  <div class="content">
+    <div class="sec-label" style="margin-bottom:0"><span>Marcas registradas</span></div>
+    <table class="tbl"><thead><tr><th>Nombre</th><th>País de Origen</th><th>Categoría</th><th></th></tr></thead>
+    <tbody id="tb-m"></tbody></table>
+  </div>
+</div>
+
+<!-- VENTAS -->
+<div id="page-ventas" class="page">
+  <div class="ed-header">
+    <div><div class="ed-eye">Transacciones</div><div class="ed-title">Ven<em>tas</em></div><div class="ed-sub">Registro de ventas realizadas</div></div>
+    <button class="btn-p" onclick="openDr('venta')">+ Nueva venta</button>
+  </div>
+  <div class="content">
+    <div class="sec-label" style="margin-bottom:0"><span>Historial de ventas</span></div>
+    <table class="tbl"><thead><tr><th>Cliente</th><th>Prendas</th><th>Total</th><th>Fecha</th><th></th></tr></thead>
+    <tbody id="tb-v"></tbody></table>
+  </div>
+</div>
+
+<!-- REPORTE -->
+<div id="page-reporte" class="page">
+  <div class="ed-header">
+    <div><div class="ed-eye">Análisis</div><div class="ed-title">Repor<em>te</em></div><div class="ed-sub">Marcas con al menos una venta registrada</div></div>
+    <button class="btn-p" onclick="loadReporte()">↺ Actualizar</button>
+  </div>
+  <div class="content" style="padding-top:32px">
+    <div id="rep-grid" class="rep-grid"></div>
+  </div>
+</div>
+
+<!-- DRAWERS -->
+<div class="overlay" id="ov-prenda">
+  <div class="drawer">
+    <div class="dr-head"><div><div class="dr-eye">Inventario</div><div class="dr-title" id="dt-p">Nueva Prenda</div></div><button class="dr-close" onclick="closeDr('prenda')">✕</button></div>
+    <div class="dr-body">
+      <input type="hidden" id="p-id"/>
+      <div class="field"><label>Nombre de la prenda</label><input id="p-nom" placeholder="Ej: Blazer Oversize Lino"/></div>
+      <div class="field"><label>Marca</label><input id="p-mar" placeholder="Ej: Aurelia Studio"/></div>
+      <div class="frow">
+        <div class="field"><label>Talla</label><input id="p-tal" placeholder="S, M, L, XL"/></div>
+        <div class="field"><label>Precio (₡)</label><input id="p-pre" type="number" placeholder="0"/></div>
+      </div>
+      <div class="field"><label>Stock</label><input id="p-sto" type="number" placeholder="0"/></div>
+    </div>
+    <div class="dr-foot"><button class="btn-g" onclick="closeDr('prenda')">Cancelar</button><button class="btn-p" onclick="savePrenda()">Guardar prenda</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="ov-usuario">
+  <div class="drawer">
+    <div class="dr-head"><div><div class="dr-eye">Clientes</div><div class="dr-title" id="dt-u">Nuevo Usuario</div></div><button class="dr-close" onclick="closeDr('usuario')">✕</button></div>
+    <div class="dr-body">
+      <input type="hidden" id="u-id"/>
+      <div class="field"><label>Nombre completo</label><input id="u-nom" placeholder="Ej: Gael Montiel"/></div>
+      <div class="field"><label>Correo electrónico</label><input id="u-ema" type="email" placeholder="correo@email.com"/></div>
+      <div class="frow">
+        <div class="field"><label>Teléfono</label><input id="u-tel" placeholder="8888-0000"/></div>
+        <div class="field"><label>Fecha de registro</label><input id="u-fec" type="date"/></div>
+      </div>
+      <div class="field"><label>Dirección</label><input id="u-dir" placeholder="Ciudad, Provincia"/></div>
+    </div>
+    <div class="dr-foot"><button class="btn-g" onclick="closeDr('usuario')">Cancelar</button><button class="btn-p" onclick="saveUsuario()">Guardar usuario</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="ov-marca">
+  <div class="drawer">
+    <div class="dr-head"><div><div class="dr-eye">Catálogo</div><div class="dr-title" id="dt-m">Nueva Marca</div></div><button class="dr-close" onclick="closeDr('marca')">✕</button></div>
+    <div class="dr-body">
+      <input type="hidden" id="m-id"/>
+      <div class="field"><label>Nombre de la marca</label><input id="m-nom" placeholder="Ej: Aurelia Studio"/></div>
+      <div class="field"><label>País de origen</label><input id="m-pai" placeholder="Ej: Italia"/></div>
+      <div class="field"><label>Categoría</label><input id="m-cat" placeholder="Ej: Moda contemporánea"/></div>
+    </div>
+    <div class="dr-foot"><button class="btn-g" onclick="closeDr('marca')">Cancelar</button><button class="btn-p" onclick="saveMarca()">Guardar marca</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="ov-venta">
+  <div class="drawer">
+    <div class="dr-head"><div><div class="dr-eye">Transacciones</div><div class="dr-title">Nueva Venta</div></div><button class="dr-close" onclick="closeDr('venta')">✕</button></div>
+    <div class="dr-body">
+      <div class="field"><label>Cliente</label><input id="v-usu" placeholder="Nombre del cliente"/></div>
+      <div class="field"><label>Prenda</label><input id="v-pre" placeholder="Nombre de la prenda"/></div>
+      <div class="frow">
+        <div class="field"><label>Cantidad</label><input id="v-can" type="number" placeholder="1" min="1"/></div>
+        <div class="field"><label>Total (₡)</label><input id="v-tot" type="number" placeholder="0"/></div>
+      </div>
+      <div class="field"><label>Fecha</label><input id="v-fec" type="date"/></div>
+    </div>
+    <div class="dr-foot"><button class="btn-g" onclick="closeDr('venta')">Cancelar</button><button class="btn-p" onclick="saveVenta()">Registrar venta</button></div>
+  </div>
+</div>
+
+<div class="toasts" id="toasts"></div>
+
+<script>
+const API = 'http://127.0.0.1:5000/tienda/api/v1';
+
+// NAV
+function nav(btn, page) {
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('page-' + page).classList.add('active');
+  ({ dashboard: loadDash, prendas: loadPrendas, usuarios: loadUsuarios, marcas: loadMarcas, ventas: loadVentas, reporte: loadReporte })[page]?.();
+}
+function navTo(page) {
+  const btn = document.querySelector(`.nav-btn:nth-child(${['dashboard','prendas','usuarios','marcas','ventas','reporte'].indexOf(page)+1})`);
+  if (btn) nav(btn, page);
+}
+
+// AJAX
+function req(method, path, data, cb) {
+  $.ajax({ type: method, url: API + path, contentType: 'application/json',
+    data: data ? JSON.stringify(data) : null, success: cb,
+    error: xhr => toast(xhr.responseJSON?.error || 'Error en la solicitud', 'err') });
+}
+
+// TOAST
+function toast(msg, type = 'ok') {
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.textContent = msg;
+  document.getElementById('toasts').appendChild(el);
+  setTimeout(() => el.remove(), 3000);
+}
+
+// DRAWER
+function openDr(t)  { document.getElementById(`ov-${t}`).classList.add('open'); }
+function closeDr(t) {
+  document.getElementById(`ov-${t}`).classList.remove('open');
+  document.querySelectorAll(`#ov-${t} input`).forEach(i => i.value = '');
+}
+document.querySelectorAll('.overlay').forEach(ov =>
+  ov.addEventListener('click', e => { if (e.target === ov) ov.classList.remove('open'); }));
+
+// ICONS
+const iconEdit = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
+const iconDel  = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>`;
+
+function empty(cols, msg) {
+  return `<tr><td colspan="${cols}"><div class="empty"><div class="empty-sym">∅</div><p>${msg}</p></div></td></tr>`;
+}
+
+// DASHBOARD
+function loadDash() {
+  req('GET','/prendas', null, d=>{ document.getElementById('c-p').textContent=d.length; renderDash(d.slice(0,6)); });
+  req('GET','/usuarios',null, d=>document.getElementById('c-u').textContent=d.length);
+  req('GET','/marcas',  null, d=>document.getElementById('c-m').textContent=d.length);
+  req('GET','/ventas',  null, d=>document.getElementById('c-v').textContent=d.length);
+}
+function renderDash(data) {
+  const tb = document.getElementById('dash-tb');
+  if(!data.length){ tb.innerHTML=empty(5,'Sin prendas registradas'); return; }
+  tb.innerHTML = data.map(p=>`<tr>
+    <td><span class="cell-serif">${p.nombre}</span></td>
+    <td><span class="cell-coral">${p.marca}</span></td>
+    <td>${p.talla}</td>
+    <td>₡${Number(p.precio).toLocaleString()}</td>
+    <td><span class="tag ${p.stock<=5?'tag-low':'tag-ok'}">${p.stock} uds</span></td>
+  </tr>`).join('');
+}
+
+// PRENDAS
+function loadPrendas() {
+  req('GET','/prendas',null, data=>{
+    const tb=document.getElementById('tb-p');
+    if(!data.length){ tb.innerHTML=empty(6,'No hay prendas en el catálogo'); return; }
+    tb.innerHTML=data.map(p=>`<tr>
+      <td><span class="cell-serif">${p.nombre}</span></td>
+      <td><span class="cell-coral">${p.marca}</span></td>
+      <td>${p.talla}</td>
+      <td>₡${Number(p.precio).toLocaleString()}</td>
+      <td><span class="tag ${p.stock<=5?'tag-low':'tag-ok'}">${p.stock} uds</span></td>
+      <td style="text-align:right;white-space:nowrap">
+        <button class="abtn" onclick='editP(${JSON.stringify(p)})'>${iconEdit}</button>
+        <button class="abtn del" onclick="delP('${p._id}')">${iconDel}</button>
+      </td>
+    </tr>`).join('');
+  });
+}
+function editP(p) {
+  document.getElementById('dt-p').textContent='Editar Prenda';
+  ['id','nom','mar','tal','pre','sto'].forEach((k,i)=>
+    document.getElementById('p-'+k).value=[p._id,p.nombre,p.marca,p.talla,p.precio,p.stock][i]);
+  openDr('prenda');
+}
+function savePrenda() {
+  const id=document.getElementById('p-id').value;
+  const d={nombre:$('#p-nom').val(),marca:$('#p-mar').val(),talla:$('#p-tal').val(),precio:+$('#p-pre').val(),stock:+$('#p-sto').val()};
+  if(id) req('PUT',`/prendas/${id}`,d,()=>{toast('Prenda actualizada');closeDr('prenda');loadPrendas();});
+  else   req('POST','/prendas',d,()=>{toast('Prenda creada');closeDr('prenda');loadPrendas();});
+}
+function delP(id) {
+  if(!confirm('¿Eliminar esta prenda?'))return;
+  req('DELETE',`/prendas/${id}`,null,()=>{toast('Prenda eliminada');loadPrendas();});
+}
+
+// USUARIOS
+function loadUsuarios() {
+  req('GET','/usuarios',null,data=>{
+    const tb=document.getElementById('tb-u');
+    if(!data.length){ tb.innerHTML=empty(5,'No hay usuarios registrados'); return; }
+    tb.innerHTML=data.map(u=>`<tr>
+      <td><span class="cell-serif">${u.nombre}</span></td>
+      <td style="color:var(--muted);font-size:0.8rem">${u.email}</td>
+      <td>${u.telefono}</td>
+      <td>${u.direccion}</td>
+      <td style="text-align:right;white-space:nowrap">
+        <button class="abtn" onclick='editU(${JSON.stringify(u)})'>${iconEdit}</button>
+        <button class="abtn del" onclick="delU('${u._id}')">${iconDel}</button>
+      </td>
+    </tr>`).join('');
+  });
+}
+function editU(u) {
+  document.getElementById('dt-u').textContent='Editar Usuario';
+  document.getElementById('u-id').value=u._id;
+  document.getElementById('u-nom').value=u.nombre;
+  document.getElementById('u-ema').value=u.email;
+  document.getElementById('u-tel').value=u.telefono;
+  document.getElementById('u-dir').value=u.direccion;
+  document.getElementById('u-fec').value=u.fechaRegistro||'';
+  openDr('usuario');
+}
+function saveUsuario() {
+  const id=document.getElementById('u-id').value;
+  const d={nombre:$('#u-nom').val(),email:$('#u-ema').val(),telefono:$('#u-tel').val(),direccion:$('#u-dir').val(),fechaRegistro:$('#u-fec').val()};
+  if(id) req('PUT',`/usuarios/${id}`,d,()=>{toast('Usuario actualizado');closeDr('usuario');loadUsuarios();});
+  else   req('POST','/usuarios',d,()=>{toast('Usuario creado');closeDr('usuario');loadUsuarios();});
+}
+function delU(id) {
+  if(!confirm('¿Eliminar este usuario?'))return;
+  req('DELETE',`/usuarios/${id}`,null,()=>{toast('Usuario eliminado');loadUsuarios();});
+}
+
+// MARCAS
+function loadMarcas() {
+  req('GET','/marcas',null,data=>{
+    const tb=document.getElementById('tb-m');
+    if(!data.length){ tb.innerHTML=empty(4,'No hay marcas registradas'); return; }
+    tb.innerHTML=data.map(m=>`<tr>
+      <td><span class="cell-serif">${m.nombre}</span></td>
+      <td>${m.paisOrigen}</td>
+      <td><span class="cell-coral">${m.categoria}</span></td>
+      <td style="text-align:right;white-space:nowrap">
+        <button class="abtn" onclick='editM(${JSON.stringify(m)})'>${iconEdit}</button>
+        <button class="abtn del" onclick="delM('${m._id}')">${iconDel}</button>
+      </td>
+    </tr>`).join('');
+  });
+}
+function editM(m) {
+  document.getElementById('dt-m').textContent='Editar Marca';
+  document.getElementById('m-id').value=m._id;
+  document.getElementById('m-nom').value=m.nombre;
+  document.getElementById('m-pai').value=m.paisOrigen;
+  document.getElementById('m-cat').value=m.categoria;
+  openDr('marca');
+}
+function saveMarca() {
+  const id=document.getElementById('m-id').value;
+  const d={nombre:$('#m-nom').val(),paisOrigen:$('#m-pai').val(),categoria:$('#m-cat').val()};
+  if(id) req('PUT',`/marcas/${id}`,d,()=>{toast('Marca actualizada');closeDr('marca');loadMarcas();});
+  else   req('POST','/marcas',d,()=>{toast('Marca creada');closeDr('marca');loadMarcas();});
+}
+function delM(id) {
+  if(!confirm('¿Eliminar esta marca?'))return;
+  req('DELETE',`/marcas/${id}`,null,()=>{toast('Marca eliminada');loadMarcas();});
+}
+
+// VENTAS
+function loadVentas() {
+  req('GET','/ventas',null,data=>{
+    const tb=document.getElementById('tb-v');
+    if(!data.length){ tb.innerHTML=empty(5,'No hay ventas registradas'); return; }
+    tb.innerHTML=data.map(v=>`<tr>
+      <td><span class="cell-serif">${v.usuario}</span></td>
+      <td style="font-size:0.78rem;color:var(--muted)">${(v.prendas||[]).map(p=>`${p.nombre} ×${p.cantidad}`).join(', ')}</td>
+      <td><span class="cell-coral" style="font-family:'Cormorant Garamond',serif;font-size:1.15rem">₡${Number(v.total).toLocaleString()}</span></td>
+      <td style="color:var(--muted);font-size:0.8rem">${v.fecha}</td>
+      <td style="text-align:right">
+        <button class="abtn del" onclick="delV('${v._id}')">${iconDel}</button>
+      </td>
+    </tr>`).join('');
+  });
+}
+function saveVenta() {
+  const d={usuario:$('#v-usu').val(),prendas:[{nombre:$('#v-pre').val(),cantidad:+$('#v-can').val()}],total:+$('#v-tot').val(),fecha:$('#v-fec').val()};
+  req('POST','/ventas',d,()=>{toast('Venta registrada');closeDr('venta');loadVentas();});
+}
+function delV(id) {
+  if(!confirm('¿Eliminar esta venta?'))return;
+  req('DELETE',`/ventas/${id}`,null,()=>{toast('Venta eliminada');loadVentas();});
+}
+
+// REPORTE
+function loadReporte() {
+  req('GET','/reportes/marcas-con-ventas',null,data=>{
+    const el=document.getElementById('rep-grid');
+    if(!data.length){ el.innerHTML=`<div class="empty" style="background:var(--white);padding:70px"><div class="empty-sym">∅</div><p>Sin datos de ventas</p></div>`; return; }
+    el.innerHTML=data.map((r,i)=>`
+      <div class="rep-card">
+        <div class="rep-name">${r._id}</div>
+        <div class="rep-row"><span class="rep-lbl">Total ventas</span><span class="rep-val">${r.totalVentas}</span></div>
+        <div class="rep-row"><span class="rep-lbl">Prendas vendidas</span><span class="rep-val">${r.totalPrendas}</span></div>
+        <div class="rep-deco">${String(i+1).padStart(2,'0')}</div>
+      </div>`).join('');
+  });
+}
+
+$(()=> loadDash());
+</script>
+</body>
+</html>
